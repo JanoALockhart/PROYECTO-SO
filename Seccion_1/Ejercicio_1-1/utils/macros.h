@@ -39,4 +39,14 @@
 #define VEL_RECICLADO_BASURA 0
 
 
+//Tipos de basura
+#define VIDRIO 2
+#define CARTON 3
+#define PLASTICO 4
+#define ALUMINIO 5
+
+//Estado de la basura
+#define BASURA_RECOLECTADA 1
+
+
 #endif //__MACROS_PLANTA__INCLUDED
