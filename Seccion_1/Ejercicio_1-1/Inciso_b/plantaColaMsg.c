@@ -23,15 +23,15 @@
  */
 void* generarBasura(mensaje *m){
     srand(time(NULL));
-	int num = rand();
+	int rgn = (rand()%4)+2;
     
-	if(num%4==0){
+	if(rgn==VIDRIO){
         strcpy(m->msg,"vidrio");
-	}else if(num%4==1){
+	}else if(rgn==CARTON){
         strcpy(m->msg,"carton");
-    }else if(num%4==2){
+    }else if(rgn==PLASTICO){
         strcpy(m->msg,"plastico");
-    }else if(num%4==3){
+    }else if(rgn==ALUMINIO){
         strcpy(m->msg,"aluminio");
     }
 }
@@ -75,7 +75,7 @@ int main(){
             }
 			while(1){
 				generarBasura(&m);
-                m.tipo = 1;
+                m.tipo = BASURA_RECOLECTADA;
 				printf("Recolector %d: [%ld,%s]\n",i,m.tipo,m.msg);
                 
                 result = msgsnd(cola, &m, BYTES_MSG,0);
@@ -122,13 +122,13 @@ int main(){
                 printf("Clasificador %d Recibe: [%ld,%s]\n",i,m.tipo,m.msg);
                 //La clasificamos
                 if(strcmp(m.msg,"vidrio")==0){
-                    m.tipo=2;
+                    m.tipo=VIDRIO;
                 }else if(strcmp(m.msg,"carton")==0){
-                    m.tipo=3;
+                    m.tipo=CARTON;
                 }else if(strcmp(m.msg,"plastico")==0){
-                    m.tipo=4;
+                    m.tipo=PLASTICO;
                 }else if(strcmp(m.msg,"aluminio")==0){
-                    m.tipo=5;
+                    m.tipo=ALUMINIO;
                 }else{
                     printf("Basura no reconocida\n");
                 }
@@ -169,13 +169,26 @@ int main(){
         }
         
 		while(1){
-        
-			if (msgrcv(cola, &m, BYTES_MSG,2,0)==-1){
-				printf("Error en la lectura mensaje\n");
-                printf("%s\n",strerror(errno));
+            int ayudar;
+            ayudar = msgrcv(cola, &m, BYTES_MSG,VIDRIO,IPC_NOWAIT);
+            if(ayudar>0){
+                sleep(VEL_RECICLADO_BASURA);
+			    printf("Rec. vidrio: [%ld,%s]\n",m.tipo,m.msg);
+            }else if (ayudar ==-1 & errno==ENOMSG){//Si hay error, no encontro mensaje de su tipo
+                ayudar = msgrcv(cola, &m, BYTES_MSG,-5,IPC_NOWAIT);//intenta ayudar otro
+                if(ayudar>0){
+                    if(m.tipo==VIDRIO){
+                        printf("Rec. vidrio: [%ld,%s]\n",m.tipo,m.msg);
+                    }else{
+                        printf("Rec. Vidrio: Ayude reciclador de %s\n",m.msg);
+                    }
+                }else if(ayudar ==-1 & errno==ENOMSG){//Se pone a tomar mate
+                    printf("Rec. Vidrio: Nadie para ayudar. Tomando unos mates...\n");                    
+                    sleep(5);
+                }else{
+                    printf("%s\n",strerror(errno));                    
+                }
 			}
-            sleep(VEL_RECICLADO_BASURA);
-			printf("Rec. vidrio: [%ld,%s]\n",m.tipo,m.msg);
 		}
         return 0;
     }  
@@ -187,12 +200,26 @@ int main(){
     }else if(pid==0){
         cola = msgget(key_car,0666);
 		while(1){
-        
-			if (msgrcv(cola, &m, BYTES_MSG,3,0) == -1){
-				printf("Error en la lectura mensaje\n");
+            int ayudar;
+            ayudar = msgrcv(cola, &m, BYTES_MSG,CARTON,IPC_NOWAIT);
+            if(ayudar>0){
+                sleep(VEL_RECICLADO_BASURA);
+			    printf("Rec. vidrio: [%ld,%s]\n",m.tipo,m.msg);
+            }else if (ayudar ==-1 & errno==ENOMSG){//Si hay error, no encontro mensaje de su tipo
+                ayudar = msgrcv(cola, &m, BYTES_MSG,-5,IPC_NOWAIT);//intenta ayudar otro
+                if(ayudar>0){
+                    if(m.tipo==2){
+                        printf("Rec. vidrio: [%ld,%s]\n",m.tipo,m.msg);
+                    }else{
+                        printf("Rec. Vidrio: Ayude reciclador de %s\n",m.msg);
+                    }
+                }else if(ayudar ==-1 & errno==ENOMSG){//Se pone a tomar mate
+                    printf("Rec. Vidrio: Nadie para ayudar. Tomando unos mates...\n");                    
+                    sleep(5);
+                }else{
+                    printf("%s\n",strerror(errno));                    
+                }
 			}
-            sleep(VEL_RECICLADO_BASURA);
-			printf("Rec. carton: [%ld,%s]\n",m.tipo,m.msg);
 		}
         return 0;
     }
@@ -205,7 +232,7 @@ int main(){
         cola = msgget(key_car,0666);
         
 		while(1){
-			if (msgrcv(cola, &m, BYTES_MSG,4,0) == -1){
+			if (msgrcv(cola, &m, BYTES_MSG,PLASTICO,0) == -1){
 				printf("Error en la lectura mensaje\n");
 			}
             sleep(VEL_RECICLADO_BASURA);
@@ -221,7 +248,7 @@ int main(){
     }else if(pid==0){
         cola = msgget(key_car,0666);
 		while(1){
-			if (msgrcv(cola, &m, BYTES_MSG,5,0) == -1){
+			if (msgrcv(cola, &m, BYTES_MSG,ALUMINIO,0) == -1){
 				printf("Error en la lectura mensaje\n");
 			}
             sleep(VEL_RECICLADO_BASURA);
