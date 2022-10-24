@@ -5,6 +5,8 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <time.h>
+#include <fcntl.h>
+#include <errno.h>
 
 #include "../utils/macros.h"
 #include "../utils/genBasura.h"
@@ -41,7 +43,7 @@ void* generarBasura(basura *b){
 int main(){
     //Declaracion variables
     int RaC[2], vidrio[2], carton[2], plastico[2], aluminio[2];
-    int pid;
+    int pid, ayuda;
     basura b;
     
     //Creamos pipes
@@ -65,6 +67,12 @@ int main(){
         printf("Error al crear pipe aluminio\n");
     }
     
+    //Cambiamos flag de pipes para que sean no bloqueantes por el Read End
+    fcntl(vidrio[RE],F_SETFL,O_NONBLOCK);
+    fcntl(carton[RE],F_SETFL,O_NONBLOCK);
+    fcntl(plastico[RE],F_SETFL,O_NONBLOCK);
+    fcntl(aluminio[RE],F_SETFL,O_NONBLOCK);
+    
     //Creamos Reclectores
     for(int i=0; i<CANT_REC; i++){
         pid = fork();
@@ -72,7 +80,6 @@ int main(){
             printf("Error al crear recoector\n");
         }else if(pid==0){
         
-            srand(time(NULL));
             close(RaC[RE]);
 			
 			close(vidrio[RE]);
@@ -140,21 +147,43 @@ int main(){
     }else if(pid==0){
         
         close(vidrio[WE]);
-		
-		close(carton[RE]);
 		close(carton[WE]);
-		close(plastico[RE]);
 		close(plastico[WE]);
-		close(aluminio[RE]);
 		close(aluminio[WE]);
+        
 		close(RaC[RE]);
 		close(RaC[WE]);		
 		
 		while(1){
-			read(vidrio[RE],&b,sizeof(basura));
+			ayuda = read(vidrio[RE],&b,sizeof(basura));
+            
+            if(ayuda>=0){//Encontro basura en su pipe
+                printf("Rec. vidrio: %s\n",b.tipo);
+                
+            }else if(ayuda==-1 && errno==EAGAIN){//Intenta ayudar al de carton
+                ayuda = read(carton[RE],&b,sizeof(basura));
+                if(ayuda>=0){
+                    printf("Rec. vidrio ayuda a Rec. cartón: %s\n",b.tipo);
+                    
+                }else if(ayuda==-1 && errno==EAGAIN){//Intenta ayudar al de plastico
+                    ayuda = read(plastico[RE],&b,sizeof(basura));
+                    if(ayuda>=0){
+                        printf("Rec. vidrio ayuda a Rec. plastico: %s\n",b.tipo);
+                        
+                    }else if(ayuda==-1 && errno==EAGAIN){//Intenta ayudar al de aluminio
+                        ayuda = read(aluminio[RE],&b,sizeof(basura));
+                        if(ayuda>=0){
+                            printf("Rec. vidrio ayuda a Rec. aluminio: %s\n",b.tipo);
+                            
+                        }else if(ayuda==-1 && errno==EAGAIN){//Si no pudo ayudar a nadie, toma mate
+                            printf("Rec. vidrio se toma unos mates...\n");
+                            sleep(VEL_TOMANDO_MATE);
+                        }
+                    }
+                }
+            }
             sleep(VEL_RECICLADO_BASURA);
-			printf("Rec. vidrio: %s\n",b.tipo);
-		}
+        }
         
         return 0;
     }
@@ -165,20 +194,42 @@ int main(){
         printf("Error al crear reciclador de carton\n");
     }else if(pid==0){
         close(carton[WE]);
-		
-		close(vidrio[RE]);
 		close(vidrio[WE]);
-		close(plastico[RE]);
 		close(plastico[WE]);
-		close(aluminio[RE]);
 		close(aluminio[WE]);
+        
 		close(RaC[RE]);
 		close(RaC[WE]);		
 		
 		while(1){
-			read(carton[RE],&b,sizeof(basura));
+			ayuda = read(carton[RE],&b,sizeof(basura));
+            
+            if(ayuda>=0){//Encontro basura en su pipe
+                printf("Rec. carton: %s\n",b.tipo);
+                
+            }else if(ayuda==-1 && errno==EAGAIN){//Intenta ayudar al de vidrio
+                ayuda = read(vidrio[RE],&b,sizeof(basura));
+                if(ayuda>=0){
+                    printf("Rec. carton ayuda a Rec. vidrio: %s\n",b.tipo);
+                    
+                }else if(ayuda==-1 && errno==EAGAIN){//Intenta ayudar al de plastico
+                    ayuda = read(plastico[RE],&b,sizeof(basura));
+                    if(ayuda>=0){
+                        printf("Rec. carton ayuda a Rec. plastico: %s\n",b.tipo);
+                        
+                    }else if(ayuda==-1 && errno==EAGAIN){//Intenta ayudar al de aluminio
+                        ayuda = read(aluminio[RE],&b,sizeof(basura));
+                        if(ayuda>=0){
+                            printf("Rec. carton ayuda a Rec. aluminio: %s\n",b.tipo);
+                            
+                        }else if(ayuda==-1 && errno==EAGAIN){//Si no pudo ayudar a nadie, toma mate
+                            printf("Rec. carton se toma unos mates...\n");
+                            sleep(VEL_TOMANDO_MATE);
+                        }
+                    }
+                }
+            }
             sleep(VEL_RECICLADO_BASURA);
-			printf("Rec. Carton: %s\n",b.tipo);
 		}
         return 0;
     }
@@ -189,20 +240,42 @@ int main(){
         printf("Error al crear reciclador de plastico\n");
     }else if(pid==0){
         close(plastico[WE]);
-		
-		close(carton[RE]);
 		close(carton[WE]);
-		close(vidrio[RE]);
 		close(vidrio[WE]);
-		close(aluminio[RE]);
 		close(aluminio[WE]);
+        
 		close(RaC[RE]);
 		close(RaC[WE]);		
 		
 		while(1){
-			read(plastico[RE],&b,sizeof(basura));
+			ayuda = read(plastico[RE],&b,sizeof(basura));
+            
+            if(ayuda>=0){//Encontro basura en su pipe
+                printf("Rec. plastico: %s\n",b.tipo);
+                
+            }else if(ayuda==-1 && errno==EAGAIN){//Intenta ayudar al de carton
+                ayuda = read(carton[RE],&b,sizeof(basura));
+                if(ayuda>=0){
+                    printf("Rec. plastico ayuda a Rec. cartón: %s\n",b.tipo);
+                    
+                }else if(ayuda==-1 && errno==EAGAIN){//Intenta ayudar al de plastico
+                    ayuda = read(vidrio[RE],&b,sizeof(basura));
+                    if(ayuda>=0){
+                        printf("Rec. plastico ayuda a Rec. vidrio: %s\n",b.tipo);
+                        
+                    }else if(ayuda==-1 && errno==EAGAIN){//Intenta ayudar al de aluminio
+                        ayuda = read(aluminio[RE],&b,sizeof(basura));
+                        if(ayuda>=0){
+                            printf("Rec. plastico ayuda a Rec. aluminio: %s\n",b.tipo);
+                            
+                        }else if(ayuda==-1 && errno==EAGAIN){//Si no pudo ayudar a nadie, toma mate
+                            printf("Rec. plastico se toma unos mates...\n");
+                            sleep(VEL_TOMANDO_MATE);
+                        }
+                    }
+                }
+            }
             sleep(VEL_RECICLADO_BASURA);
-			printf("Reciclador Plastico: %s\n",b.tipo);
 		}
         return 0;
     }
@@ -213,20 +286,42 @@ int main(){
         printf("Error al crear reciclador de aluminio\n");
     }else if(pid==0){
         close(aluminio[WE]);
-		
-		close(carton[RE]);
 		close(carton[WE]);
-		close(plastico[RE]);
 		close(plastico[WE]);
-		close(vidrio[RE]);
 		close(vidrio[WE]);
+        
 		close(RaC[RE]);
 		close(RaC[WE]);		
 		
 		while(1){
-			read(aluminio[RE],&b,sizeof(basura));
+			ayuda = read(aluminio[RE],&b,sizeof(basura));
+            
+            if(ayuda>=0){//Encontro basura en su pipe
+                printf("Rec. aluminio: %s\n",b.tipo);
+                
+            }else if(ayuda==-1 && errno==EAGAIN){//Intenta ayudar al de carton
+                ayuda = read(carton[RE],&b,sizeof(basura));
+                if(ayuda>=0){
+                    printf("Rec. aluminio ayuda a Rec. cartón: %s\n",b.tipo);
+                    
+                }else if(ayuda==-1 && errno==EAGAIN){//Intenta ayudar al de plastico
+                    ayuda = read(vidrio[RE],&b,sizeof(basura));
+                    if(ayuda>=0){
+                        printf("Rec. aluminio ayuda a Rec. vidrio: %s\n",b.tipo);
+                        
+                    }else if(ayuda==-1 && errno==EAGAIN){//Intenta ayudar al de aluminio
+                        ayuda = read(plastico[RE],&b,sizeof(basura));
+                        if(ayuda>=0){
+                            printf("Rec. aluminio ayuda a Rec. plastico: %s\n",b.tipo);
+                            
+                        }else if(ayuda==-1 && errno==EAGAIN){//Si no pudo ayudar a nadie, toma mate
+                            printf("Rec. aluminio se toma unos mates...\n");
+                            sleep(VEL_TOMANDO_MATE);
+                        }
+                    }
+                }
+            }
             sleep(VEL_RECICLADO_BASURA);
-			printf("Reciclador. alum: %s\n",b.tipo);
 		}
         return 0;
     }
