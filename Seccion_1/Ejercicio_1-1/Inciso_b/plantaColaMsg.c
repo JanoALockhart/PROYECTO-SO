@@ -36,6 +36,112 @@ void* generarBasura(mensaje *m){
     }
 }
 
+/*
+ * Funcion que contiene el código que realiza el recolector
+ * queue: el la ID de la cola de mensajes en la que el recolector deposita la basura
+ * nro: es el numero asignado al recolector para distinguirlo de los otros
+ * */
+int recolector(int queue, int nro){
+    mensaje m;
+    int result;
+
+    while(1){
+        generarBasura(&m);
+        m.tipo = BASURA_RECOLECTADA;
+        printf("Recolector %d: [%ld,%s]\n",nro,m.tipo,m.msg);
+                
+        result = msgsnd(queue, &m, BYTES_MSG,0);
+        if (result == -1){
+            printf("Error en la escritura mensaje: %s\n",strerror(errno));
+            exit(1);
+        }
+        sleep(VEL_GEN_BASURA);//Intervalo de tiempo en el que no se genera basura
+    }
+            
+    return 0;
+}
+
+/*  Funcion que contiene el codigo que realiza el clasificador
+ *  colaRec es el identificador de la cola entre Recolectores y Clasificadores
+ *  colaSend es el identificador de la cola entre Clasificadores y Recicladores
+ *  nro es el numero asignado al clasificador para identificarlo 
+ *
+ * */
+int clasificador(int colaRec, int colaSend, int nro){
+    mensaje m;
+    int result;
+
+    while(1){
+        //Recibimos basura de recolectores
+        result = msgrcv(colaRec, &m, BYTES_MSG, 0, 0);
+        if(result==-1){
+            printf("Error al recibir mensaje: %s\n",strerror(errno));
+        }
+                
+        printf("Clasificador %d Recibe: [%ld,%s]\n",nro,m.tipo,m.msg);
+                
+        //La clasificamos
+        if(strcmp(m.msg,"vidrio")==0){
+            m.tipo=VIDRIO;
+        }else if(strcmp(m.msg,"carton")==0){
+            m.tipo=CARTON;
+        }else if(strcmp(m.msg,"plastico")==0){
+            m.tipo=PLASTICO;
+        }else if(strcmp(m.msg,"aluminio")==0){
+            m.tipo=ALUMINIO;
+        }else{
+            printf("Error: Basura no reconocida\n");
+        }
+                
+        sleep(VEL_CLASIFICACION_BASURA);//Intervalo de tiempo que tarda en clasificar
+        
+        //Se envia a la cola de mensaje hacia recicladores
+        printf("Clasificador %d envia: [%ld,%s]\n",nro,m.tipo,m.msg);
+        result = msgsnd(colaSend, &m, BYTES_MSG, 0);
+        if(result==-1){
+            printf("Error al enviar a reciclador: %s\n",strerror(errno));
+        }
+                
+    }
+    
+    return 0;
+}
+
+/*Funcion que contiene el codigo del reciclador
+ * colaRec es el identificador de la cola entre Clasificadores y Recicladores
+ * tipoBasura es el numero que identifica al tipo de basura que el Reciclador puede recibir
+ * strBasura es la cadena de caracteres del tipo de basura ("vidrio","carton","plastico","aluminio")
+ * 
+ * */
+int reciclador(int colaRec, int tipoBasura, char* strBasura){
+    mensaje m;
+    int ayudar;
+    
+    while(1){
+        //Primero revisa si puede recibir basura del tipo que le corresponde
+        ayudar = msgrcv(colaRec, &m, BYTES_MSG,tipoBasura,IPC_NOWAIT);
+        if(ayudar>0){
+            sleep(VEL_RECICLADO_BASURA);
+            printf("Rec. %s: [%ld,%s]\n",strBasura,m.tipo,m.msg);
+        }else if (ayudar ==-1 & errno==ENOMSG){//Si hay error, no encontro mensaje de su tipo entonces...
+            ayudar = msgrcv(colaRec, &m, BYTES_MSG,0,IPC_NOWAIT);//intenta ayudar otro
+            if(ayudar>0){
+                if(m.tipo==tipoBasura){
+                    printf("Rec. %s: [%ld,%s]\n",strBasura,m.tipo,m.msg);//Se "ayuda" a si mismo
+                }else{
+                    printf("Rec. %s: Ayude reciclador de %s con [%ld,%s]\n",strBasura,m.msg,m.tipo,m.msg);//Ayuda a otro
+                }
+            }else if(ayudar ==-1 & errno==ENOMSG){//Sino se pone a tomar mate
+                printf("Rec. %s: Nadie para ayudar. Tomando unos mates...\n",strBasura);                    
+                sleep(VEL_TOMANDO_MATE);
+            }else{
+                printf("%s\n",strerror(errno));                    
+            }
+        }
+    }
+}
+
+
 
 //PLANTA DE RECICLADO CON COLA DE MENSAJES
 int main(){
@@ -71,23 +177,10 @@ int main(){
         }else if(pid==0){
             cola = msgget(key_rac, 0666);
             if(cola<0){
-                printf("%s\n",strerror(errno));
+                printf("Error al obtener id de cola: %s\n",strerror(errno));
             }
-			while(1){
-				generarBasura(&m);
-                m.tipo = BASURA_RECOLECTADA;
-				printf("Recolector %d: [%ld,%s]\n",i,m.tipo,m.msg);
-                
-                result = msgsnd(cola, &m, BYTES_MSG,0);
-				if (result == -1){
-					printf("Error en la escritura mensaje\n");
-                    printf("%s\n",strerror(errno));
-                    exit(1);
-				}
-                sleep(VEL_GEN_BASURA);//Intervalo de tiempo en el que no se genera basura
-			}
-            
-            return 0;
+			recolector(cola,i); //Codigo del recolector
+            exit(1);
         }
         
         sleep(VEL_CREACION_RECOLECTORES);//Intervalo de tiempo entre la creacion de uno y otro para que rnd()
@@ -99,8 +192,7 @@ int main(){
         pid = fork();
         
         if(pid<0){
-            printf("Error al crear Clasificador\n");
-            printf("%s\n",strerror(errno));
+            printf("Error al crear Clasificador: %s\n",strerror(errno));
             
         }else if(pid==0){
             //Vinculamos a las colas
@@ -112,40 +204,8 @@ int main(){
             if(cola2<0){
                 printf("Error en clasificador: %s\n",strerror(errno));
             }
-            
-            while(1){
-                //Recibimos basura de recolectores
-                result = msgrcv(cola1, &m, BYTES_MSG, 0, 0);
-                if(result==-1){
-                    printf("%s\n",strerror(errno));
-                }
-                printf("Clasificador %d Recibe: [%ld,%s]\n",i,m.tipo,m.msg);
-                //La clasificamos
-                if(strcmp(m.msg,"vidrio")==0){
-                    m.tipo=VIDRIO;
-                }else if(strcmp(m.msg,"carton")==0){
-                    m.tipo=CARTON;
-                }else if(strcmp(m.msg,"plastico")==0){
-                    m.tipo=PLASTICO;
-                }else if(strcmp(m.msg,"aluminio")==0){
-                    m.tipo=ALUMINIO;
-                }else{
-                    printf("Basura no reconocida\n");
-                }
-                
-                sleep(VEL_CLASIFICACION_BASURA);//Intervalo de tiempo que tarda en clasificar
-                
-                //Se envia a la cola de mensaje hacia recicladores
-                printf("Clasificador %d Envia: [%ld,%s]\n",i,m.tipo,m.msg);
-                result = msgsnd(cola2, &m, BYTES_MSG, 0);
-                if(result==-1){
-                    printf("Error al enviar a reciclador\n");
-                    printf("%s\n",strerror(errno));
-                }
-                
-            }
-            
-            return 0;
+            clasificador(cola1, cola2, i);
+            exit(1);
         }
     }  
     
@@ -154,91 +214,47 @@ int main(){
     //--Creamos recicladores--//
     //Reciclador de vidrio
     pid = fork();
-    
     if(pid<0){
         printf("Error al crear reciclador de vidrio\n");
         printf("%s\n",strerror(errno));
         
     }else if(pid==0){
-        
         cola = msgget(key_car,0666);
-        
         if(cola<0){
-            printf("Error al asociarse a cola desde Reciclador\n");
-            printf("%s\n",strerror(errno));
+            printf("Error al asociarse a cola desde Reciclador: %s\n",strerror(errno));
         }
         
-		while(1){
-            int ayudar;
-            ayudar = msgrcv(cola, &m, BYTES_MSG,VIDRIO,IPC_NOWAIT);
-            if(ayudar>0){
-                sleep(VEL_RECICLADO_BASURA);
-			    printf("Rec. vidrio: [%ld,%s]\n",m.tipo,m.msg);
-            }else if (ayudar ==-1 & errno==ENOMSG){//Si hay error, no encontro mensaje de su tipo
-                ayudar = msgrcv(cola, &m, BYTES_MSG,-5,IPC_NOWAIT);//intenta ayudar otro
-                if(ayudar>0){
-                    if(m.tipo==VIDRIO){
-                        printf("Rec. vidrio: [%ld,%s]\n",m.tipo,m.msg);
-                    }else{
-                        printf("Rec. Vidrio: Ayude reciclador de %s\n",m.msg);
-                    }
-                }else if(ayudar ==-1 & errno==ENOMSG){//Se pone a tomar mate
-                    printf("Rec. Vidrio: Nadie para ayudar. Tomando unos mates...\n");                    
-                    sleep(5);
-                }else{
-                    printf("%s\n",strerror(errno));                    
-                }
-			}
-		}
-        return 0;
+        reciclador(cola, VIDRIO, "vidrio");
+        exit(1);
     }  
     
     //Reciclador de carton
     pid=fork();
     if(pid<0){
         printf("Error al crear reciclador de carton\n");
+        
     }else if(pid==0){
         cola = msgget(key_car,0666);
-		while(1){
-            int ayudar;
-            ayudar = msgrcv(cola, &m, BYTES_MSG,CARTON,IPC_NOWAIT);
-            if(ayudar>0){
-                sleep(VEL_RECICLADO_BASURA);
-			    printf("Rec. vidrio: [%ld,%s]\n",m.tipo,m.msg);
-            }else if (ayudar ==-1 & errno==ENOMSG){//Si hay error, no encontro mensaje de su tipo
-                ayudar = msgrcv(cola, &m, BYTES_MSG,-5,IPC_NOWAIT);//intenta ayudar otro
-                if(ayudar>0){
-                    if(m.tipo==2){
-                        printf("Rec. vidrio: [%ld,%s]\n",m.tipo,m.msg);
-                    }else{
-                        printf("Rec. Vidrio: Ayude reciclador de %s\n",m.msg);
-                    }
-                }else if(ayudar ==-1 & errno==ENOMSG){//Se pone a tomar mate
-                    printf("Rec. Vidrio: Nadie para ayudar. Tomando unos mates...\n");                    
-                    sleep(5);
-                }else{
-                    printf("%s\n",strerror(errno));                    
-                }
-			}
-		}
-        return 0;
+        if(cola<0){
+            printf("Error al asociarse a cola desde Reciclador: %s\n",strerror(errno));
+        }
+		
+        reciclador(cola, CARTON, "carton");
+        exit(1);
     }
     
     pid=fork();
     if(pid<0){
         printf("Error al crear reciclador de plastico\n");
-    }else if(pid==0){
-    
-        cola = msgget(key_car,0666);
         
-		while(1){
-			if (msgrcv(cola, &m, BYTES_MSG,PLASTICO,0) == -1){
-				printf("Error en la lectura mensaje\n");
-			}
-            sleep(VEL_RECICLADO_BASURA);
-			printf("Rec. plástico: [%ld,%s]\n",m.tipo,m.msg);
-		}
-        return 0;
+    }else if(pid==0){
+        cola = msgget(key_car,0666);
+        if(cola<0){
+            printf("Error al asociarse a cola desde Reciclador: %s\n",strerror(errno));
+        }
+        
+		reciclador(cola, PLASTICO, "plastico");
+        exit(1);
     }
     
     //Reciclador de aluminio
@@ -247,14 +263,12 @@ int main(){
         printf("Error al crear reciclador de aluminio\n");
     }else if(pid==0){
         cola = msgget(key_car,0666);
-		while(1){
-			if (msgrcv(cola, &m, BYTES_MSG,ALUMINIO,0) == -1){
-				printf("Error en la lectura mensaje\n");
-			}
-            sleep(VEL_RECICLADO_BASURA);
-			printf("Rec. aluminio: [%ld,%s]\n",m.tipo,m.msg);
-		}
-        return 0;
+        if(cola<0){
+            printf("Error al asociarse a cola desde Reciclador: %s\n",strerror(errno));
+        }
+        
+		reciclador(cola, ALUMINIO, "aluminio");
+        exit(1);
     }
     
     //El padre espera por todos los procesos creados

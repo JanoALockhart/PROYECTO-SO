@@ -38,6 +38,10 @@
   */
 #define VEL_RECICLADO_BASURA 0
 
+/* VEL_TOMANDO_MATE
+ * Indica el tiempo que tarda un reciclador en tomar mate
+ * */
+#define VEL_TOMANDO_MATE 5
 
 //Tipos de basura
 #define VIDRIO 2
