@@ -28,12 +28,11 @@ void liberarEspacioArgumentos(char **param, int argc){
  *                   todos los argumentos separados.
  * int cantParam: Es la cantidad de argumentos que recibe el comando
  * 
- * Esta funcion recibe un comando con sus argumentos en una cadena, crea un arreglo
- * donde almacena cada una de las palabras en el comando y devuelve
- * un puntero al mismo. La cantidad de palabras que se reciben
+ * Esta funcion desglosa la cadena cmd en el comando y sus argumentos y la almacena en un arreglo. 
+ * La cantidad de argumentos que recibe el comando
  * debe especificarse en cantParam. Si la cantidad de palabras encontradas
- * en el comando es distinta a la especificada en cantParam, devuelve -1.
- * En caso de exito devuelve 0.
+ * en el comando es distinta a la especificada en cantParam, devuelve -1 y param es NULL.
+ * En caso de exito devuelve 0 y param apunta al arreglo con los argumentos.
  * 
  * */
 int obtenerParametros(char *cmd, char*** puntArgv,int cantParam){
@@ -59,7 +58,6 @@ int obtenerParametros(char *cmd, char*** puntArgv,int cantParam){
     *puntArgv = param;
     
     if(count!=cantParam){
-        printf("La cantidad de parametros ingresada es invalida\n");
         liberarEspacioArgumentos(param,count);
         error=-1;
         *puntArgv=NULL;
@@ -68,11 +66,46 @@ int obtenerParametros(char *cmd, char*** puntArgv,int cantParam){
     return error;
 }
 
+
+/*Procedimiento cargarComando
+ * char *cmd: es el comando completo que recibio el usuario
+ * int cantArg: es la cantidad de argumentos que recibe el archivo del comando
+ * char *fileCmd: es el nombre del archivo en el que esta implementado el comando
+ * 
+ * Crea un proceso hijo y se le carga el codigo del archivo fileCmd con los argumentos de cmd.
+ * 
+ * */
+void cargarComando(char* cmd, int cantArg, char *fileCmd){
+    int pid, result;
+    char **param;
+    
+    pid=0;
+    param=NULL;
+    
+    result = obtenerParametros(cmd,&param,cantArg);
+    if(result==0){
+        pid = fork();
+        if(pid==0){
+            if(execv(fileCmd,param)==-1){
+                printf("ERROR al cargar la imagen del comando\n");
+            } 
+            exit(1);
+        }else if(pid<0){
+            printf("ERROR: No se pudo crear hijo para el comando\n");
+        }
+        wait(NULL);
+        liberarEspacioArgumentos(param,MS_NPARAM_CREAT_DIR);
+    }else{
+        printf("La cantidad de parametros ingresada es invalida\n");
+    }
+}
+
+
 int main(){
     char cmd[TAM_INPUT];
     char *primerCad;
     char **param;
-    int result, exit, pid;
+    int result, exit;
     
     result=0;
     exit=0;
@@ -99,27 +132,45 @@ int main(){
                     printf("Hasta luego!\n");
                     exit=1;
                 }
+                liberarEspacioArgumentos(param,MS_NPARAM_EXIT);
+            }
             
-            //COMANDO SETFILEPER
-            }else if(strcmp(primerCad,MS_MODIF_PERMISOS_ARCH)==0){
-                result = obtenerParametros(cmd,&param,MS_NPARAM_MPA);
-                if(result==0){
-                    pid = fork();
-                    if(pid==0){
-                        execv("./setFilePer",param);
-                    }else if(pid<0){
-                        printf("ERROR: No se pudo crear hijo para el comando\n");
-                    }
-                    wait(NULL);
-                }
-            //COMANDO MOSTRAR CONTENIDO DE UN ARCHIVO
-            
-            
-            //COMANDO AYUDA
+            //COMANDO CREAR UN DIRECTORIO
+            else if(strcmp(primerCad,MS_CREAR_DIRECTORIO)==0){
+                cargarComando(cmd,MS_NPARAM_CREAT_DIR,MS_NOM_CREAT_DIR);
+            }
                 
+            //COMANDO ELIMINAR UN DIRECTORIO 
+            else if(strcmp(primerCad,MS_ELIMINAR_DIRECTORIO)==0){
+                cargarComando(cmd,MS_NPARAM_ELIM_DIR,MS_NOM_ELIM_DIR);
+            }   
+            
+            //COMANDO CREAR UN ARCHIVO
+            else if(strcmp(primerCad,MS_CREAR_ARCHIVO)==0){
+                cargarComando(cmd,MS_NPARAM_CREAT_FILE,MS_NOM_CREAT_FILE);
+            }
+            
+            //COMANDO LISTAR CONTENIDO DE UN DIRECTORIO
+            else if(strcmp(primerCad,MS_LISTAR_CONTENIDO_DIRECTORIO)==0){
+                cargarComando(cmd,MS_NPARAM_LIST_DIR, MS_NOM_LIST_DIR);
+            }
+            
+            //COMANDO MOSTRAR CONTENIDO DE UN ARCHIVO
+            else if(strcmp(primerCad,MS_MOSTRAR_CONTENIDO_ARCHIVO)==0){
+                cargarComando(cmd,MS_NPARAM_VIEW_FILE, MS_NOM_VIEW_FILE);
+            }
+            //COMANDO AYUDA
+            else if(strcmp(primerCad,MS_AYUDA)==0){
+                cargarComando(cmd,MS_NPARAM_HELP,MS_NOM_HELP);
+            }
+            
+            //COMANDO MODIFICAR PERMISOS DE UN ARCHIVO (MPA)
+            else if(strcmp(primerCad,MS_MODIF_PERMISOS_ARCH)==0){
+                cargarComando(cmd,MS_NPARAM_MPA,MS_NOM_MPA);
+            }
             //COMANDO NO ENCONTRADO
-            }else{
-                printf("ERROR comando '%s' no es valido\n",primerCad);
+            else{
+                printf("ERROR comando '%s' no existe. Use 'help'\n",primerCad);
             }
         }
         
