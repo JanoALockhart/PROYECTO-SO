@@ -18,6 +18,8 @@ int main(){
     
     permiso = PERMISO_S;
     strcpy(dir,STR_SUR);
+    countSur=0;
+    countNorte=0;
     
     //Vincularse a cola de mensajes
     idCola = msgget(KEY,0666);
@@ -28,16 +30,19 @@ int main(){
     
     while(1){
         vaciaPuente=0;
+        
         //Policia crea timer
         pid = fork();
         if(pid==0){
-            //execv
+            if(execv(TIMER_FILE,NULL)==-1){
+                printf("ERROR al cargar imagen del timer\n");
+            }
             exit(EXIT_FAILURE);
         }else if(pid<0){
             printf("ERROR al crear proceso hijo para el timer\n");
         }
         
-        printf("POLICIA: tunro del %s \n",dir);
+        printf("-------POLICIA: ahora es turno del %s------- \n",dir);
         while(!vaciaPuente){
             //Dar permisos a autos de la direccion en permiso
             msg.tipo = permiso;
@@ -50,16 +55,18 @@ int main(){
                 countNorte++;
             }
             
-            //Ve si el timer envio mensaje para cambiar //ERROR ACA o al crear TIMER
+            //Ve si el timer envio mensaje para cambiar
             result = msgrcv(idCola, &msgTimer,TAM_MSG_BYTES,SWAP_POLI,IPC_NOWAIT);
-            if(result>0){
+            if(result>=0){
                 vaciaPuente=1;
                 waitpid(pid,NULL,0);
             }
+
             sleep(TIEMPO_ENTRE_PERMISOS);
         }
         
-        printf("POLICIA: se acabo turno del %s\n",dir);
+        printf("-------POLICIA: se acabo turno del %s. Esperando que se vacie el puente-------\n",dir);
+        
         //Espera a que los autos del puente salgan
         while(countSur>0){
             if(msgrcv(idCola,&msg,TAM_MSG_BYTES,SALE_S,0)==-1){
@@ -83,7 +90,6 @@ int main(){
             permiso = PERMISO_N;
             strcpy(dir,STR_NORTE);
         }
-    
         
     }
    

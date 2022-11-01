@@ -33,7 +33,7 @@ int main(int argc, char *argv[]){
         printf("ERROR direccion no valida para auto\n");
     }
     
-    printf("Auto de %s APARECIO\n",argv[1]);
+    printf("Auto %s de %s APARECIO\n",argv[2],argv[1]);
     //Protocolo de entrada
     if(msgrcv(idCola,&msg,TAM_MSG_BYTES,permiso,0)==-1){ //Recibir permiso de policia
         printf("ERROR al leer mensaje Policia-Auto: %s\n",strerror(errno));
@@ -47,17 +47,16 @@ int main(int argc, char *argv[]){
     }*/
     
     //Seccion critica
-    printf("Auto %s ENTRA al puente\n",argv[1]);
-    printf("Auto %s PASANDO por el puente\n",argv[1]);
+    printf("Auto %s de %s ENTRA al puente\n",argv[2],argv[1]);
+    //printf("Auto %s PASANDO por el puente\n",argv[1]);
     sleep(TIEMPO_EN_PUENTE);
-    printf("Auto %s SALE del puente\n",argv[1]);
+    printf("Auto %s de %s SALE del puente\n",argv[2],argv[1]);
     
     //Protocolo de salida
     msg.tipo = salida;
     if(msgsnd(idCola,&msg,TAM_MSG_BYTES,0)==-1){//Decirle al policia que sale
         printf("ERROR al enviar mensaje Auto-Policia: %s\n",strerror(errno));
     }
-    
 
     return 0;
 }
