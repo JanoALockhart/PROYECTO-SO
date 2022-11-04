@@ -4,6 +4,8 @@
 #include <sys/stat.h>
 #include <errno.h>
 
+#include "utils/macros.h"
+
 #define UR 2
 #define UW 3
 #define UX 4
@@ -21,11 +23,9 @@ int main(int argc, char* argv[]){
     newMode=0;
     error=0;
     
-    /*
-    printf("argc: %d\n",argc);
-    for(int i=0;i<argc;i++){
-        printf("arg %d: %s\n",i,argv[i]);
-    }*/
+    if(argc!=MS_NPARAM_MPA){
+        exit(CANT_ARG_INCORRECTA);
+    }
     
     //Verificamos que los permisos que tiene son 0 o 1
     for(int i=2;i<argc && !error;i++){

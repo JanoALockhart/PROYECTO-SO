@@ -37,4 +37,9 @@
 //Nombre archivo con la ayuda
 #define MS_HELP_TEXT "ayuda.txt"
 
+
+//numeros de errores
+#define CANT_ARG_INCORRECTA 100
+#define PERMISOS_INCORRECTOS 101
+
 #endif

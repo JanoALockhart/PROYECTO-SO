@@ -6,9 +6,15 @@
 #include <errno.h>
 #include <string.h>
 
+#include "utils/macros.h"
+
 int main(int argc, char *argv[])
 {
     int ret = 0;
+    
+    if(argc!=MS_NPARAM_ELIM_DIR){
+        exit(CANT_ARG_INCORRECTA);
+    }
 
     ret = rmdir(argv[1]);
 
