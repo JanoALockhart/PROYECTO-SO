@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <sys/wait.h>
 
 #define RE 0 //READ-END pipe
 #define WE 1 //WRITE-END pipe
