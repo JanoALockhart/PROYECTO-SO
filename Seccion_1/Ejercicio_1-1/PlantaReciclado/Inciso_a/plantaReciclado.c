@@ -326,6 +326,17 @@ int main(){
         return 0;
     }
     
+    close(RaC[RE]);
+    close(RaC[WE]);
+    close(vidrio[RE]);
+    close(vidrio[WE]);
+    close(carton[RE]);
+    close(carton[WE]);
+    close(plastico[RE]);
+    close(plastico[WE]);
+    close(aluminio[RE]);
+    close(aluminio[WE]);
+    
     //El padre espera por todos los procesos creados
     for(int i=0; i<8; i++){
         wait(NULL);
