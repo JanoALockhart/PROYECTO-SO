@@ -25,7 +25,8 @@
 #define MS_NPARAM_HELP 1
 #define MS_NPARAM_MPA 11
 
-//Nombre programa comando
+
+//Nombre archivo comando
 #define MS_NOM_CREAT_DIR "./createDir"
 #define MS_NOM_ELIM_DIR "./deleteDir"
 #define MS_NOM_CREAT_FILE "./createFile"
