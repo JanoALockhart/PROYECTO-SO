@@ -7,7 +7,11 @@
 
 #include "utils.h"
 
-
+/*
+ * argv[0] = generadorAutos
+ * argv[1] = direccion en la que iran los autos que genera (NORTE/SUR)
+ * 
+ * */
 int main(int argc, char *argv[]){
     
     int pid;
@@ -39,7 +43,7 @@ int main(int argc, char *argv[]){
             exit(EXIT_FAILURE);
             
         }else if(pid<0){
-            printf("ERROR al crear auto de %s: %s\n",argv[0],strerror(errno));
+            printf("ERROR al crear auto de %s: %s\n",argv[1],strerror(errno));
         }
         nroAuto++;
         sleep(TIEMPO_APARICION_AUTOS);

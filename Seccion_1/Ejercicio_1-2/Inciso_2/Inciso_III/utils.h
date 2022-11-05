@@ -14,13 +14,17 @@ typedef struct{
 #define STR_NORTE "NORTE"
 
 //TIPOS DE MENSAJES
-#define PERMISO_N 1
-#define ENTRA_N 2
-#define SALE_N 3
+#define PEDIDO_PERMISO_N 1
+#define PEDIDO_PERMISO_S 2
 
-#define PERMISO_S 10
-#define ENTRA_S 11
-#define SALE_S 12
+#define PERMISO_CONCEDIDO_N 3
+#define PERMISO_CONCEDIDO_S 4
+
+#define ENTRA_N 5
+#define ENTRA_S 6
+
+#define SALE_N 7
+#define SALE_S 8
 
 #define SWAP_POLI 20
 
@@ -39,7 +43,11 @@ typedef struct{
 //Tiempos
 #define TIEMPO_APARICION_AUTOS 3
 #define TIEMPO_EN_PUENTE 5
-#define TIEMPO_ENTRE_PERMISOS 4
+#define TIEMPO_ENTRE_PERMISOS 0
 #define TIEMPO_TIMER 10
 
+//Argumentos para el main
+#define CANT_ARGS_PUENTE 2
+#define CON_GENERADORES "0"
+#define SIN_GENERADORES "1"
 
