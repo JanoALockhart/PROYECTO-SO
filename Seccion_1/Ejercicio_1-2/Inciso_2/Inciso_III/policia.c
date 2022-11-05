@@ -58,6 +58,7 @@ int main(){
             //y espera por su confirmacion
             result = msgrcv(idCola, &msg, TAM_MSG_BYTES,recPedido,IPC_NOWAIT);
             if(result>=0){
+                printf("Policia da permiso a auto de %s\n",dirActual);
                 msg.tipo = darPermiso;
                 if(msgsnd(idCola, &msg, TAM_MSG_BYTES,0)==-1){
                     printf("ERROR policia al conceder permiso a auto: %s\n",strerror(errno));

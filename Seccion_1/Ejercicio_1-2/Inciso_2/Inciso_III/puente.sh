@@ -6,7 +6,8 @@ gcc auto.c -o auto
 gcc policia.c -o policia
 gcc timer.c -o timer
 echo "Archivos compilados"
-ipcrm -a #BORRAR ESTA LINEA
+
+#ipcrm -a #BORRAR ESTA LINEA
 #echo "Ejecutando..."
 #echo ""
 #./puenteProcesosColaMsg
