@@ -2,6 +2,12 @@
 #ifndef __MACROS_PLANTA__INCLUDED
 #define __MACROS_PLANTA__INCLUDED
 
+#define LEN_BASURA 20 //Cantidad maxima de caracteres para el nombre de la basura
+
+//Basura
+typedef struct basura{
+	char tipo[LEN_BASURA];
+} basura;
 
 #define CANT_REC 3 //Es la cantidad de recolectores en la planta
 #define CANT_CLAS 2 //Es la cantidad de recicladores en la planta
@@ -43,14 +49,11 @@
  * */
 #define VEL_TOMANDO_MATE 5
 
-//Tipos de basura
-#define VIDRIO 2
-#define CARTON 3
-#define PLASTICO 4
-#define ALUMINIO 5
-
-//Estado de la basura
-#define BASURA_RECOLECTADA 1
+//Nombres de la basura
+#define STR_VIDRIO "vidrio"
+#define STR_PLASTICO "plastico"
+#define STR_CARTON "carton"
+#define STR_ALUMINIO "aluminio"
 
 
 #endif //__MACROS_PLANTA__INCLUDED

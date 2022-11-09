@@ -8,8 +8,7 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include "../utils/macros.h"
-#include "../utils/genBasura.h"
+#include "macros.h"
 
 #define RE 0 //READ-END pipe
 #define WE 1 //WRITE-END pipe

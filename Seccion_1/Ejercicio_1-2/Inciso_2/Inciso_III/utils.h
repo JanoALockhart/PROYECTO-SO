@@ -46,8 +46,3 @@ typedef struct{
 #define TIEMPO_ENTRE_PERMISOS 0
 #define TIEMPO_TIMER 10
 
-//Argumentos para el main
-#define CANT_ARGS_PUENTE 2
-#define CON_GENERADORES "0"
-#define SIN_GENERADORES "1"
-
