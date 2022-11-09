@@ -24,17 +24,17 @@
  *         
  */
 void* generarBasura(basura *b){
-    srand(time(NULL));
+    srand(time(NULL)*getpid());
 	int num = rand();
     
 	if(num%4==0){
-        strcpy(b->tipo,"vidrio");
+        strcpy(b->tipo,STR_VIDRIO);
 	}else if(num%4==1){
-        strcpy(b->tipo,"carton");
+        strcpy(b->tipo,STR_CARTON);
     }else if(num%4==2){
-        strcpy(b->tipo,"plastico");
+        strcpy(b->tipo,STR_PLASTICO);
     }else if(num%4==3){
-        strcpy(b->tipo,"aluminio");
+        strcpy(b->tipo,STR_ALUMINIO);
     }
 }
 
@@ -92,13 +92,12 @@ int main(){
             
             while(1){
                 generarBasura(&b);
-                printf("Recolector %d: %s\n",i,b.tipo);
+                printf("Recolector %d: envia %s\n",i,b.tipo);
                 write(RaC[WE],&b,sizeof(basura));
                 sleep(VEL_GEN_BASURA);//Intervalo de tiempo en el que no se genera basura
             }
             return 0;
         }
-        sleep(VEL_CREACION_RECOLECTORES);//Para asegurar que generen aleatoriamente cosas distintas
     }
     
     //Creamos Clasificadores
@@ -116,7 +115,9 @@ int main(){
             
             while(1){
                 read(RaC[RE], &b, sizeof(basura));
-                printf("Clasif %d: %s\n",i,b.tipo);
+                printf("Clasif %d: recibe %s\n",i,b.tipo);
+                sleep(VEL_CLASIFICACION_BASURA);
+                printf("Clasif %d: envia %s a su reciclador\n",i,b.tipo);
                 
                 if(strcmp(b.tipo,"vidrio")==0){
                     write(vidrio[WE],&b,sizeof(basura));
@@ -129,8 +130,6 @@ int main(){
                 }else{
                     printf("basura no identificada\n");
                 }
-                
-                sleep(VEL_CLASIFICACION_BASURA);//Intervalo de tiempo que tarda en clasificar
             }
             
             return 0;
