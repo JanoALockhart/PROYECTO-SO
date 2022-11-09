@@ -155,7 +155,7 @@ void F(){
 	while(1){
 		read(DoEF[RE],&aux,sizeof(aux));
 		read(DoEF[RE],&aux,sizeof(aux));
-		printf("F\n");
+		printf("F\n\n");
 		aux=1;
 		write(FA[WE],&aux,sizeof(aux));
 		write(FA[WE],&aux,sizeof(aux));	

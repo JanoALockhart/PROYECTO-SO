@@ -12,6 +12,8 @@ sem_t BC;
 sem_t BCDoE;
 sem_t DoEF;
 
+#define TIEMPO_SLEEP 0
+
 //RUTINAS
 static void* rutinaA(void* nada){
 	while(1){
@@ -19,7 +21,7 @@ static void* rutinaA(void* nada){
 		sem_wait(&FA);
 
 		printf("A\n");
-		sleep(1);
+		sleep(TIEMPO_SLEEP);
 		
 		sem_post(&ABC);
 	}
@@ -32,7 +34,7 @@ static void* rutinaB(void* nada){
 		sem_wait(&ABC);
 		
 		printf("B\n");
-		sleep(1);
+		sleep(TIEMPO_SLEEP);
 		
 		sem_post(&BC);
 		sem_post(&BCDoE);
@@ -46,7 +48,7 @@ static void* rutinaC(void* nada){
 		sem_wait(&ABC);
 		
 		printf("C\n");
-		sleep(1);
+		sleep(TIEMPO_SLEEP);
 		
 		sem_post(&CB);
 		sem_post(&BCDoE);
@@ -59,7 +61,7 @@ static void* rutinaD(void* nada){
 		sem_wait(&BCDoE);
 		
 		printf("(D)\n");
-		sleep(1);
+		sleep(TIEMPO_SLEEP);
 		
 		sem_post(&DoEF);
 		sem_post(&DoEA);
@@ -72,7 +74,7 @@ static void* rutinaE(void* nada){
 		sem_wait(&BCDoE);
 		
 		printf("(E)\n");
-		sleep(1);
+		sleep(TIEMPO_SLEEP);
 		
 		sem_post(&DoEF);
 		sem_post(&DoEA);
@@ -86,7 +88,7 @@ static void* rutinaF(void* nada){
 		sem_wait(&DoEF);
 		
 		printf("F\n\n");
-		sleep(1);
+		sleep(TIEMPO_SLEEP);
 		
 		sem_post(&FA);
 		sem_post(&FA);
