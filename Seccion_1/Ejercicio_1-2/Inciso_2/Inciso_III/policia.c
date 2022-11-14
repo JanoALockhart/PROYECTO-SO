@@ -83,8 +83,6 @@ int main(){
                 vaciaPuente=1;
                 waitpid(pid,NULL,0);
             }
-
-            sleep(TIEMPO_ENTRE_PERMISOS);
         }
         
         printf("-------POLICIA: se acabo turno del %s. Esperando que se vacie el puente-------\n",dirActual);

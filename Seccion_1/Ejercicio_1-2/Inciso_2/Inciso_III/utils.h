@@ -43,6 +43,5 @@ typedef struct{
 //Tiempos
 #define TIEMPO_APARICION_AUTOS 3
 #define TIEMPO_EN_PUENTE 5
-#define TIEMPO_ENTRE_PERMISOS 0
 #define TIEMPO_TIMER 10
 
