@@ -33,7 +33,7 @@ typedef struct basura{
   * basura. Una vez pasado ese tiempo, puede reciclar otra basura.
   * (0 es instantaneo. A mayor numero, mas tarda en reciclar)
   */
-#define VEL_RECICLADO_BASURA 5
+#define VEL_RECICLADO_BASURA 2
 
 /* VEL_TOMANDO_MATE
  * Indica el tiempo que tarda un reciclador en tomar mate

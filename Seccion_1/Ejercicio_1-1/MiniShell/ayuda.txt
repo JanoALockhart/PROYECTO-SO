@@ -4,26 +4,35 @@
 exit: Sale de la minishell
 
 createDir [nombre directorio]:
-        Crea un directorio con nombre "nombre directorio".
+        Crea un directorio con nombre "nombre directorio". Puede
+        especificarse la ruta completa si se quiere en una
+        ubicacion especifica.
          
 deleteDir [nombre directorio]:
-        Borra el directorio con nombre "nombre directorio".
+        Borra el directorio con nombre "nombre directorio". Puede
+        especificarse la ruta completa si se encuentra en una 
+        ubicacion especifica.
 
 createFile [nombre archivo]:
-        Crea un archivo vacio con el nombre "nombre archivo".
+        Crea un archivo vacio con el nombre "nombre archivo". Puede
+        especificarse la ruta completa si se quiere en una
+        ubicacion especifica.
         
 listDir [nombre directorio]:
         Muestra todos los elementos que contiene el directorio con
-        nombre "nombre directorio".
+        nombre "nombre directorio". Puede especificarse la ruta 
+        completa si se quiere en una ubicacion especifica.
         
 viewFile [nombre archivo]:
         Muestra el contenido de un archivo con nombre "nombre archivo".
+        Puede especificarse la ruta completa si se quiere en una 
+        ubicacion especifica.
     
 help: Muestra este texto.
 
-setFilePer [nombre archivo] [UR] [UW] [UX] [GR] [GW] [GX] [OR] [OW] [OX]:
+setFilePer [ubicacion archivo] [UR] [UW] [UX] [GR] [GW] [GX] [OR] [OW] [OX]:
         Cambia los permisos de escritura, lectura y ejecucion del 
-        archivo con nombre "nombre archivo". Los argumentos UR, UW, UX
+        archivo ubicado en "ubicacion archivo". Los argumentos UR, UW, UX
         GR, GW, GX, OR, OW, OX solo pueden ser 0 o 1 y todos deben
         establecerse al utilizar este comando.
         0 significa que no se tendra ese permiso.
